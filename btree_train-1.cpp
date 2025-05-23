@@ -56,8 +56,20 @@ public:
 
     // Implementar el método search con complejidad O(log n)
     bool search(T key){
-        //TODO
-    }    
+        Node<T> *actual = root;
+        while(actual!= nullptr){
+            int i = 0;
+            while(i<actual->count and key > actual->keys[i]){
+                i++;
+            }
+            if(i<actual->count and key == actual->keys[i]) return true;
+            if(actual->isLeaf) return false;
+            actual = actual->children[i];
+
+        }
+        return false;
+        
+    }
 
     // Implementar el método range_search con complejidad O(k * log n )
     vector<int> range_search(T begin, T end){
