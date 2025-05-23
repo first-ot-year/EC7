@@ -30,7 +30,12 @@ struct Node{
     }
 
     ~Node(){
-        // TODO: liberar memoria de keys y children
+        for(int i = 0; i<count; i++){
+            if(!leaf) delete children[i];
+        }
+        if(!leaf) delete children[count];
+        delete[] keys;
+        delete[] children;
     }
 };
 
@@ -44,10 +49,19 @@ public:
     }
 
     ~BTree(){
-        // TODO: liberar memoria de root
+        delete root;
     }
 
     // Mostrar el árbol en orden
+    void toString(Node<T>* nodo, string &result){
+        int i= 0;
+        for (; i < nodo->count; i++)
+        {
+            if(!nodo->leaf) toString(nodo->children[i], result);
+            result = std::to_string(nodo->keys[i])+",";
+        }
+        if(!nodo->leaf) toString(nodo->keys[i], result);
+    }
     string toString(){
         string result = "";
         toString(root, result);
