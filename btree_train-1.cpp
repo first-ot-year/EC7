@@ -30,13 +30,12 @@ struct Node{
     }
 
     ~Node(){
-        for(int i = 0; i < count; i++){
+        for(int i = 0; i<count; i++){
             if(!leaf) delete children[i];
         }
         if(!leaf) delete children[count];
-        //liberar los arrays de datos
-        delete [] keys;
-        delete [] children;
+        delete[] keys;
+        delete[] children;
     }
 };
 
@@ -50,10 +49,19 @@ public:
     }
 
     ~BTree(){
-        // TODO: liberar memoria de root
+        delete root;
     }
 
     // Mostrar el árbol en orden
+    void toString(Node<T>* nodo, string &result){
+        int i= 0;
+        for (; i < nodo->count; i++)
+        {
+            if(!nodo->leaf) toString(nodo->children[i], result);
+            result = std::to_string(nodo->keys[i])+",";
+        }
+        if(!nodo->leaf) toString(nodo->keys[i], result);
+    }
     string toString(){
         string result = "";
         toString(root, result);
@@ -62,13 +70,72 @@ public:
 
     // Implementar el método search con complejidad O(log n)
     bool search(T key){
-        //TODO
-    }    
+        Node<T> *actual = root;
+        while(actual!= nullptr){
+            int i = 0;
+            while(i<actual->count and key > actual->keys[i]){
+                i++;
+            }
+            if(i<actual->count and key == actual->keys[i]) return true;
+            if(actual->isLeaf) return false;
+            actual = actual->children[i];
+
+        }
+        return false;
+        
+    }
 
     // Implementar el método range_search con complejidad O(k * log n )
     vector<int> range_search(T begin, T end){
-        //TODO
-    }
+        vector<int> resultado;
+        Node<T>* actual = root;
+        vector<pair<NOde<T>*, int>> stack;
+        while(actual != nullptr){
+            int i = 0;
+            while(i < actual->count and actual->keys<begin) i++;
+
+            if(actual->leaf){
+                while (i<actual->count and actual->keys[i]<=end){
+                    resultado.push_back(actual->keys[i]);
+                    i++;
+                }
+                break;
+            }
+            else{
+                stack.push_back({actual, i});
+                actual = actual->children[i];
+            }
+        }
+        while(!stack.empty){
+            auto [node, idx] = stack.back;
+            while (idx < node->count && node->keys[idx] <= end) {
+            if (node->keys[idx] >= begin) {
+                result.push_back(node->keys[idx]);
+            }
+
+            if (!node->leaf) {
+                Node<T>* child = node->children[idx + 1];
+                int j = 0;
+                while (child) {
+                    while (j < child->count && child->keys[j] < begin) j++;
+                    if (child->leaf) {
+                        while (j < child->count && child->keys[j] <= end) {
+                            result.push_back(child->keys[j]);
+                            j++;
+                        }
+                        child = nullptr;
+                    } else {
+                        stack.push_back({child, j});
+                        child = child->children[j];
+                        break;
+                    }
+                }
+            }
+            idx++;
+        }
+        }
+
+        }
 
     bool check_node(Node<T>* node,
                     int depth,
