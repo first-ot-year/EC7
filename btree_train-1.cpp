@@ -137,21 +137,77 @@ public:
 
         }
 
+    bool check_node(Node<T>* node,
+                    int depth,
+                    int &leaf_level,
+                    bool has_min, T min_val,
+                    bool has_max, T max_val,
+                    bool is_root)
+    {
+        int t = (M+1)/2;
+
+        // 1) número de claves
+        int min_keys = 0;
+
+        if(is_root) min_keys = 1;
+        else min_keys = t - 1;
+
+        if (node->count < min_keys || node->count > M - 1)
+            return false;
+
+        // 3) claves ordenadas
+        for (int i = 0; i + 1 < node->count; ++i) {
+            if (!(node->keys[i] < node->keys[i+1]))
+                return false;
+        }
+
+        if (node->leaf) {
+            // 2) hojas al mismo nivel
+            if (leaf_level == -1) {
+                leaf_level = depth;
+            } else if (leaf_level != depth) {
+                return false;
+            }
+            return true;
+        } else {
+            // 2b) cada nodo interno tiene count+1 hijos
+            int ccount = node->count + 1;
+
+            // verificamos que los punteros existan
+            for (int i = 0; i < ccount; ++i) {
+                if (!node->children[i]) return false;
+            }
+
+            // 4) Los elementos del subarbol izquierdo son menores / Los elementos del subarbol derecho son mayores
+
+            for (int i = 0; i < ccount; ++i) {
+                bool child_has_min = has_min || (i > 0);
+                T child_min = (i > 0 ? node->keys[i-1] : min_val);
+                bool child_has_max = has_max || (i < node->count);
+                T child_max = (i < node->count ? node->keys[i] : max_val);
+                if (!check_node(node->children[i],
+                                depth + 1,
+                                leaf_level,
+                                child_has_min, child_min,
+                                child_has_max, child_max,
+                        /*is_root=*/false))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+    }
+
     // Verifique las propiedades de un árbol B
     bool check_properties(){
-        //TODO
-        //1- cada nodo debe tener al menos M/2
-        //2- garantizar que las hojas esten al mismo nivel
-        //   cada nodo debe tener count+1 hijos
-        //3- los elementos en el nodo deben estar ordenados
-        //4- dado un elemento en un nodo interno:
-        //    - los elemenos del subarbol izquierdo son menores 
-        //    - los elemenos del subarbol derecho son mayores
+        if (!root) return true;
+        int leaf_level = -1;
+        return check_node(root, 0, leaf_level, false, T(), false, T(), true);
     }
 
     // Construya un árbol B a partir de un vector de elementos ordenados
     static BTree* build_from_ordered_vector(vector<T> elements){
-        //TODO
     }
 
 private:   
@@ -214,12 +270,14 @@ void test2(){
 void test3(){
     std::vector<int> elements = {1,2,3,4,5,6,7,8,9,10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20};
     BTree<int>* btree = BTree<int>::build_from_ordered_vector(elements);
+    cout<<btree->toString()<<endl;
+
     if(btree->check_properties()){
         cout<<"El árbol cumple con las propiedades de un árbol B."<<endl;
         cout<<btree->toString()<<endl; //1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20
     }else{
         cout<<"El árbol no cumple con las propiedades de un árbol B."<<endl;
-    }    
+    }
     delete btree;
 }
 
